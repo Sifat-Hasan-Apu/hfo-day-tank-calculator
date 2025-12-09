@@ -446,8 +446,8 @@ button:active {
     background: rgba(255, 255, 255, 0.98);
     border-radius: 24px;
     width: 100%;
-    max-width: 500px;
-    max-height: 85vh;
+    max-width: 700px;
+    max-height: 90vh;
     overflow: hidden;
     box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
     transform: scale(0.9) translateY(20px);
@@ -541,11 +541,21 @@ button:active {
     border: 1px solid #bae6fd;
 }
 
+.stat-card.highlight {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border-color: #6ee7b7;
+}
+
+.stat-card.highlight .stat-value {
+    color: #047857;
+}
+
 .stat-value {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: var(--primary);
     line-height: 1.2;
+    word-break: break-word;
 }
 
 .stat-label {
@@ -554,11 +564,24 @@ button:active {
     margin-top: 4px;
 }
 
+/* Range Stats */
+.range-stats {
+    font-size: 12px;
+    color: var(--text-medium);
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
 /* Range Chart */
 .range-chart {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 8px;
 }
 
 .range-bar-container {
@@ -568,7 +591,7 @@ button:active {
 }
 
 .range-label {
-    min-width: 90px;
+    min-width: 100px;
     font-size: 11px;
     color: #047857;
     font-weight: 600;
@@ -578,18 +601,29 @@ button:active {
 
 .range-bar-wrapper {
     flex: 1;
-    height: 22px;
+    height: 26px;
     background: rgba(16, 185, 129, 0.12);
-    border-radius: 11px;
+    border-radius: 13px;
     overflow: hidden;
 }
 
 .range-bar {
     height: 100%;
     background: linear-gradient(90deg, #10b981, #34d399);
-    border-radius: 11px;
+    border-radius: 13px;
     transition: width 0.6s ease;
-    min-width: 4px;
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+}
+
+.range-percent {
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .range-count {

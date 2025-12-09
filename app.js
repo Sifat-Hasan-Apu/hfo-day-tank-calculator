@@ -60,24 +60,28 @@ function generateReportHTML() {
         `;
     }
 
-    // Find most searched
+    // Calculate stats
     const entries = Object.entries(searchHistory);
-    const mostSearched = entries.reduce((a, b) => b[1] > a[1] ? b : a);
+    const uniqueDips = entries.length;
+    const totalRanges = Math.ceil(14925 / 100); // 150 ranges (0-14925)
 
     // Group by 100mm ranges
     const rangeData = {};
     entries.forEach(([dip, count]) => {
         const rangeStart = Math.floor(parseInt(dip) / 100) * 100;
-        const rangeKey = `${rangeStart}-${rangeStart + 99}`;
+        const rangeEnd = Math.min(rangeStart + 99, 14925);
+        const rangeKey = `${rangeStart}-${rangeEnd}`;
         rangeData[rangeKey] = (rangeData[rangeKey] || 0) + count;
     });
 
     // Sort ranges by count
     const sortedRanges = Object.entries(rangeData)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6);
+        .sort((a, b) => b[1] - a[1]);
 
     const maxRangeCount = sortedRanges.length > 0 ? sortedRanges[0][1] : 1;
+    const mostPopularRange = sortedRanges.length > 0 ? sortedRanges[0][0] : '-';
+    const rangesCovered = Object.keys(rangeData).length;
+    const coveragePercent = ((rangesCovered / totalRanges) * 100).toFixed(1);
 
     // Generate summary HTML
     let html = `
@@ -89,65 +93,44 @@ function generateReportHTML() {
                     <div class="stat-label">মোট সার্চ</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${Object.keys(searchHistory).length.toLocaleString('bn-BD')}</div>
+                    <div class="stat-value">${uniqueDips.toLocaleString('bn-BD')}</div>
                     <div class="stat-label">ভিন্ন ডিপ মান</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value">${parseInt(mostSearched[0]).toLocaleString('bn-BD')}</div>
-                    <div class="stat-label">সর্বোচ্চ সার্চিত (মিমি)</div>
+                <div class="stat-card highlight">
+                    <div class="stat-value">${mostPopularRange}</div>
+                    <div class="stat-label">জনপ্রিয় রেঞ্জ (মিমি)</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">${mostSearched[1].toLocaleString('bn-BD')}</div>
-                    <div class="stat-label">সর্বোচ্চ সার্চ সংখ্যা</div>
+                    <div class="stat-value">${coveragePercent}%</div>
+                    <div class="stat-label">কভারেজ (০-১৪৯২৫)</div>
                 </div>
             </div>
         </div>
         
         <div class="report-section">
-            <div class="section-title">📊 রেঞ্জ অনুযায়ী সার্চ (১০০ মিমি)</div>
+            <div class="section-title">📊 রেঞ্জ অনুযায়ী সার্চ বিতরণ</div>
+            <div class="range-stats">
+                <span>📍 ${rangesCovered} টি রেঞ্জে সার্চ হয়েছে (সর্বমোট ${totalRanges} রেঞ্জ)</span>
+            </div>
             <div class="range-chart">
     `;
 
+    // Show all ranges that have data
     sortedRanges.forEach(([range, count]) => {
         const percentage = (count / maxRangeCount) * 100;
+        const countPercent = ((count / totalSearches) * 100).toFixed(1);
         html += `
             <div class="range-bar-container">
-                <span class="range-label">${range} মিমি</span>
+                <span class="range-label">${range}</span>
                 <div class="range-bar-wrapper">
-                    <div class="range-bar" style="width: ${percentage}%"></div>
+                    <div class="range-bar" style="width: ${percentage}%">
+                        <span class="range-percent">${countPercent}%</span>
+                    </div>
                 </div>
                 <span class="range-count">${count}</span>
             </div>
         `;
     });
-
-    html += `
-            </div>
-        </div>
-        
-        <div class="report-section">
-            <div class="section-title">📋 সাম্প্রতিক সার্চ (বিস্তারিত)</div>
-            <div class="recent-list">
-    `;
-
-    const recentToShow = recentSearches.slice(0, 5);
-
-    if (recentToShow.length === 0) {
-        html += '<p style="color: var(--text-medium); font-size: 13px;">কোনো সাম্প্রতিক সার্চ নেই</p>';
-    } else {
-        recentToShow.forEach(search => {
-            const explanation = generateExplanation(search);
-            html += `
-                <div class="recent-item">
-                    <div class="recent-header">
-                        <span class="recent-dip">📍 ${search.dip.toLocaleString('bn-BD')} মিমি</span>
-                        <span class="recent-volume">${search.volume.toLocaleString('bn-BD')} লিটার</span>
-                    </div>
-                    <div class="recent-explanation">${explanation}</div>
-                </div>
-            `;
-        });
-    }
 
     html += `
             </div>

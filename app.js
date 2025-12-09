@@ -1,60 +1,199 @@
 // HFO Day Tank Volume Calculator - Main Application Logic
 
-// ========== সার্চ ট্রেন্ড Feature ==========
+// ========== সার্চ অ্যানালিটিক্স Feature ==========
 let searchHistory = JSON.parse(localStorage.getItem('hfoSearchHistory')) || {};
+let recentSearches = JSON.parse(localStorage.getItem('hfoRecentSearches')) || [];
 
-function trackSearch(dipValue) {
+function trackSearch(dipValue, volume, result) {
     const key = Math.round(dipValue).toString();
     searchHistory[key] = (searchHistory[key] || 0) + 1;
+
+    // Track recent searches with details
+    const searchRecord = {
+        dip: dipValue,
+        volume: Math.round(volume),
+        timestamp: Date.now(),
+        hasFraction: result.hasFraction,
+        baseDip: result.baseDip,
+        baseVolume: result.baseVolume,
+        fraction: result.fraction,
+        fractionVolume: result.fractionVolume
+    };
+
+    recentSearches.unshift(searchRecord);
+    if (recentSearches.length > 20) recentSearches.pop();
+
     localStorage.setItem('hfoSearchHistory', JSON.stringify(searchHistory));
-    updateTrendDisplay();
+    localStorage.setItem('hfoRecentSearches', JSON.stringify(recentSearches));
 }
 
-function updateTrendDisplay() {
-    const trendChart = document.getElementById('trendChart');
-    const trendInfo = document.getElementById('trendInfo');
+function openReportModal() {
+    const modal = document.getElementById('reportModal');
+    const modalBody = document.getElementById('modalBody');
 
-    // Calculate total searches
+    modalBody.innerHTML = generateReportHTML();
+
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('show'), 10);
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }, 300);
+}
+
+function generateReportHTML() {
     const totalSearches = Object.values(searchHistory).reduce((a, b) => a + b, 0);
-    trendInfo.textContent = `মোট সার্চ: ${totalSearches.toLocaleString('bn-BD')}`;
 
-    // Get top 5 searched values
-    const sortedEntries = Object.entries(searchHistory)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5);
-
-    if (sortedEntries.length === 0) {
-        trendChart.innerHTML = '<div class="no-data">এখনো কোনো সার্চ হয়নি</div>';
-        return;
+    if (totalSearches === 0) {
+        return `
+            <div class="no-data">
+                <div class="no-data-icon">📊</div>
+                <p>এখনো কোনো সার্চ করা হয়নি</p>
+                <p style="font-size: 12px; margin-top: 8px;">ডিপ উচ্চতা দিয়ে সার্চ করুন, তারপর এখানে অ্যানালিটিক্স দেখতে পাবেন</p>
+            </div>
+        `;
     }
 
-    const maxCount = sortedEntries[0][1];
+    // Find most searched
+    const entries = Object.entries(searchHistory);
+    const mostSearched = entries.reduce((a, b) => b[1] > a[1] ? b : a);
 
-    let chartHTML = '';
-    sortedEntries.forEach(([dip, count]) => {
-        const percentage = (count / maxCount) * 100;
-        chartHTML += `
-            <div class="trend-bar-container">
-                <span class="trend-label">${dip} মিমি</span>
-                <div class="trend-bar-wrapper">
-                    <div class="trend-bar" style="width: ${percentage}%"></div>
+    // Group by 100mm ranges
+    const rangeData = {};
+    entries.forEach(([dip, count]) => {
+        const rangeStart = Math.floor(parseInt(dip) / 100) * 100;
+        const rangeKey = `${rangeStart}-${rangeStart + 99}`;
+        rangeData[rangeKey] = (rangeData[rangeKey] || 0) + count;
+    });
+
+    // Sort ranges by count
+    const sortedRanges = Object.entries(rangeData)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+
+    const maxRangeCount = sortedRanges.length > 0 ? sortedRanges[0][1] : 1;
+
+    // Generate summary HTML
+    let html = `
+        <div class="report-section">
+            <div class="section-title">📈 সারাংশ</div>
+            <div class="summary-grid">
+                <div class="stat-card">
+                    <div class="stat-value">${totalSearches.toLocaleString('bn-BD')}</div>
+                    <div class="stat-label">মোট সার্চ</div>
                 </div>
-                <span class="trend-count">${count}</span>
+                <div class="stat-card">
+                    <div class="stat-value">${Object.keys(searchHistory).length.toLocaleString('bn-BD')}</div>
+                    <div class="stat-label">ভিন্ন ডিপ মান</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${parseInt(mostSearched[0]).toLocaleString('bn-BD')}</div>
+                    <div class="stat-label">সর্বোচ্চ সার্চিত (মিমি)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${mostSearched[1].toLocaleString('bn-BD')}</div>
+                    <div class="stat-label">সর্বোচ্চ সার্চ সংখ্যা</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <div class="section-title">📊 রেঞ্জ অনুযায়ী সার্চ (১০০ মিমি)</div>
+            <div class="range-chart">
+    `;
+
+    sortedRanges.forEach(([range, count]) => {
+        const percentage = (count / maxRangeCount) * 100;
+        html += `
+            <div class="range-bar-container">
+                <span class="range-label">${range} মিমি</span>
+                <div class="range-bar-wrapper">
+                    <div class="range-bar" style="width: ${percentage}%"></div>
+                </div>
+                <span class="range-count">${count}</span>
             </div>
         `;
     });
 
-    trendChart.innerHTML = chartHTML;
+    html += `
+            </div>
+        </div>
+        
+        <div class="report-section">
+            <div class="section-title">📋 সাম্প্রতিক সার্চ (বিস্তারিত)</div>
+            <div class="recent-list">
+    `;
+
+    const recentToShow = recentSearches.slice(0, 5);
+
+    if (recentToShow.length === 0) {
+        html += '<p style="color: var(--text-medium); font-size: 13px;">কোনো সাম্প্রতিক সার্চ নেই</p>';
+    } else {
+        recentToShow.forEach(search => {
+            const explanation = generateExplanation(search);
+            html += `
+                <div class="recent-item">
+                    <div class="recent-header">
+                        <span class="recent-dip">📍 ${search.dip.toLocaleString('bn-BD')} মিমি</span>
+                        <span class="recent-volume">${search.volume.toLocaleString('bn-BD')} লিটার</span>
+                    </div>
+                    <div class="recent-explanation">${explanation}</div>
+                </div>
+            `;
+        });
+    }
+
+    html += `
+            </div>
+        </div>
+    `;
+
+    return html;
+}
+
+function generateExplanation(search) {
+    if (search.hasFraction && search.baseDip) {
+        return `✅ ডিপ ${search.dip} মিমি = মূল ${search.baseDip} মিমি (${search.baseVolume.toLocaleString('bn-BD')} লি.) + ভগ্নাংশ ${search.fraction} মিমি (+${search.fractionVolume.toLocaleString('bn-BD')} লি.) = মোট ${search.volume.toLocaleString('bn-BD')} লিটার`;
+    } else if (calibrationData && calibrationData[search.dip]) {
+        return `✅ ডিপ ${search.dip} মিমি চার্টে সরাসরি আছে = ${search.volume.toLocaleString('bn-BD')} লিটার`;
+    } else {
+        return `✅ ডিপ ${search.dip} মিমি ইন্টারপোলেশন দ্বারা গণনা = ${search.volume.toLocaleString('bn-BD')} লিটার`;
+    }
 }
 
 function clearSearchHistory() {
-    searchHistory = {};
-    localStorage.removeItem('hfoSearchHistory');
-    updateTrendDisplay();
+    if (confirm('সকল সার্চ হিস্টোরি মুছে ফেলতে চান?')) {
+        searchHistory = {};
+        recentSearches = [];
+        localStorage.removeItem('hfoSearchHistory');
+        localStorage.removeItem('hfoRecentSearches');
+
+        const modalBody = document.getElementById('modalBody');
+        if (modalBody) {
+            modalBody.innerHTML = generateReportHTML();
+        }
+    }
 }
 
-// Initialize trend display on page load
-document.addEventListener('DOMContentLoaded', updateTrendDisplay);
+// Close modal on overlay click
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        closeReportModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        closeReportModal();
+    }
+});
 
 // ========== Main Calculator ==========
 function calculateVolume() {
@@ -98,8 +237,8 @@ function calculateVolume() {
 
     infoCard.classList.add('show');
 
-    // Track this search for trend
-    trackSearch(dipHeight);
+    // Track this search for analytics
+    trackSearch(dipHeight, result.total, result);
 
     // Show breakdown
     showBreakdown(breakdownCard, breakdownContent, result, dipHeight);
@@ -107,7 +246,6 @@ function calculateVolume() {
 
 function showBreakdown(card, content, result, dipHeight) {
     if (result.hasFraction && dipHeight >= 230) {
-        // Show breakdown for fractional values
         content.innerHTML = `
             <div class="breakdown-row">
                 <span class="breakdown-label">মূল উচ্চতা (${result.baseDip} মিমি)</span>
@@ -124,7 +262,6 @@ function showBreakdown(card, content, result, dipHeight) {
         `;
         card.classList.add('show');
     } else if (calibrationData.hasOwnProperty(dipHeight)) {
-        // Exact value from chart
         content.innerHTML = `
             <div class="breakdown-row">
                 <span class="breakdown-label">চার্ট থেকে সরাসরি মান</span>
@@ -133,7 +270,6 @@ function showBreakdown(card, content, result, dipHeight) {
         `;
         card.classList.add('show');
     } else {
-        // Interpolated value
         content.innerHTML = `
             <div class="breakdown-row">
                 <span class="breakdown-label">ইন্টারপোলেশন দ্বারা গণনা</span>
@@ -145,7 +281,6 @@ function showBreakdown(card, content, result, dipHeight) {
 }
 
 function getVolumeWithBreakdown(dip) {
-    // Check if exact value exists in calibration data
     if (calibrationData.hasOwnProperty(dip)) {
         return {
             total: calibrationData[dip],
@@ -153,7 +288,6 @@ function getVolumeWithBreakdown(dip) {
         };
     }
 
-    // For DIP values 230mm and above, use fractional table
     if (dip >= 230) {
         const baseDip = Math.floor(dip / 10) * 10;
         const fraction = dip % 10;
@@ -179,7 +313,6 @@ function getVolumeWithBreakdown(dip) {
         }
     }
 
-    // Linear interpolation for values below 230mm
     let lowerDip = null;
     let upperDip = null;
 
@@ -207,21 +340,16 @@ function getVolumeWithBreakdown(dip) {
 }
 
 function getVolumeFromDip(dip) {
-    // Check if exact value exists in calibration data
     if (calibrationData.hasOwnProperty(dip)) {
         return calibrationData[dip];
     }
 
-    // For DIP values 230mm and above, use fractional table
     if (dip >= 230) {
-        // Get the base 10mm value (floor to nearest 10)
         const baseDip = Math.floor(dip / 10) * 10;
         const fraction = dip % 10;
 
-        // Check if base value exists
         if (calibrationData.hasOwnProperty(baseDip)) {
             const baseVolume = calibrationData[baseDip];
-            // Add fractional volume if fraction exists
             if (fraction > 0 && fractionalTable.hasOwnProperty(fraction)) {
                 return baseVolume + fractionalTable[fraction];
             }
@@ -229,7 +357,6 @@ function getVolumeFromDip(dip) {
         }
     }
 
-    // For values below 230mm or if base not found, use linear interpolation
     let lowerDip = null;
     let upperDip = null;
 
@@ -242,12 +369,10 @@ function getVolumeFromDip(dip) {
         }
     }
 
-    // Edge cases
     if (lowerDip === null) return calibrationData[dipValues[0]];
     if (upperDip === null) return calibrationData[dipValues[dipValues.length - 1]];
     if (lowerDip === upperDip) return calibrationData[lowerDip];
 
-    // Linear interpolation
     const lowerVolume = calibrationData[lowerDip];
     const upperVolume = calibrationData[upperDip];
     const ratio = (dip - lowerDip) / (upperDip - lowerDip);

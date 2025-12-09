@@ -59,16 +59,27 @@
                 </div>
             </div>
 
-            <!-- Search Trend Chart -->
-            <div class="trend-card" id="trendCard">
-                <div class="trend-header">
-                    <span class="trend-title">📊 সার্চ ট্রেন্ড</span>
-                    <button class="clear-btn" onclick="clearSearchHistory()">রিসেট</button>
+            <!-- Search Report Button -->
+            <button class="report-btn" onclick="openReportModal()">
+                <span class="report-btn-icon">📊</span>
+                <span>সার্চ রিপোর্ট দেখুন</span>
+            </button>
+        </div>
+
+        <!-- Search Report Modal -->
+        <div class="modal-overlay" id="reportModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h2 class="modal-title">📊 সার্চ অ্যানালিটিক্স রিপোর্ট</h2>
+                    <button class="modal-close" onclick="closeReportModal()">✕</button>
                 </div>
-                <div class="trend-chart" id="trendChart">
+                <div class="modal-body" id="modalBody">
                     <!-- Will be populated by JS -->
                 </div>
-                <div class="trend-info" id="trendInfo">মোট সার্চ: ০</div>
+                <div class="modal-footer">
+                    <button class="btn-reset" onclick="clearSearchHistory()">🗑️ রিসেট</button>
+                    <button class="btn-close" onclick="closeReportModal()">বন্ধ করুন</button>
+                </div>
             </div>
         </div>
 

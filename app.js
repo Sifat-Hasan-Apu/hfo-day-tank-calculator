@@ -1,5 +1,62 @@
 // HFO Day Tank Volume Calculator - Main Application Logic
 
+// ========== সার্চ ট্রেন্ড Feature ==========
+let searchHistory = JSON.parse(localStorage.getItem('hfoSearchHistory')) || {};
+
+function trackSearch(dipValue) {
+    const key = Math.round(dipValue).toString();
+    searchHistory[key] = (searchHistory[key] || 0) + 1;
+    localStorage.setItem('hfoSearchHistory', JSON.stringify(searchHistory));
+    updateTrendDisplay();
+}
+
+function updateTrendDisplay() {
+    const trendChart = document.getElementById('trendChart');
+    const trendInfo = document.getElementById('trendInfo');
+
+    // Calculate total searches
+    const totalSearches = Object.values(searchHistory).reduce((a, b) => a + b, 0);
+    trendInfo.textContent = `মোট সার্চ: ${totalSearches.toLocaleString('bn-BD')}`;
+
+    // Get top 5 searched values
+    const sortedEntries = Object.entries(searchHistory)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+
+    if (sortedEntries.length === 0) {
+        trendChart.innerHTML = '<div class="no-data">এখনো কোনো সার্চ হয়নি</div>';
+        return;
+    }
+
+    const maxCount = sortedEntries[0][1];
+
+    let chartHTML = '';
+    sortedEntries.forEach(([dip, count]) => {
+        const percentage = (count / maxCount) * 100;
+        chartHTML += `
+            <div class="trend-bar-container">
+                <span class="trend-label">${dip} মিমি</span>
+                <div class="trend-bar-wrapper">
+                    <div class="trend-bar" style="width: ${percentage}%"></div>
+                </div>
+                <span class="trend-count">${count}</span>
+            </div>
+        `;
+    });
+
+    trendChart.innerHTML = chartHTML;
+}
+
+function clearSearchHistory() {
+    searchHistory = {};
+    localStorage.removeItem('hfoSearchHistory');
+    updateTrendDisplay();
+}
+
+// Initialize trend display on page load
+document.addEventListener('DOMContentLoaded', updateTrendDisplay);
+
+// ========== Main Calculator ==========
 function calculateVolume() {
     const input = document.getElementById('dipHeight');
     const resultSection = document.getElementById('resultSection');
@@ -40,6 +97,9 @@ function calculateVolume() {
     upperValue.textContent = nearest.upper.dip + ' মিমি = ' + formatNumber(nearest.upper.volume) + ' লিটার';
 
     infoCard.classList.add('show');
+
+    // Track this search for trend
+    trackSearch(dipHeight);
 
     // Show breakdown
     showBreakdown(breakdownCard, breakdownContent, result, dipHeight);

@@ -429,45 +429,54 @@ button:active {
 
 .trend-chart {
     display: flex;
-    gap: 4px;
-    align-items: flex-end;
-    height: 80px;
+    flex-direction: column;
+    gap: 8px;
     padding: 8px 0;
 }
 
-.trend-bar {
+.trend-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trend-label {
+    min-width: 70px;
+    font-size: 11px;
+    color: #047857;
+    font-weight: 600;
+    text-align: right;
+}
+
+.trend-bar-wrapper {
     flex: 1;
-    background: linear-gradient(to top, #10b981, #34d399);
-    border-radius: 4px 4px 0 0;
-    min-height: 4px;
-    position: relative;
-    transition: all 0.3s ease;
-    cursor: pointer;
+    height: 18px;
+    background: rgba(16, 185, 129, 0.15);
+    border-radius: 9px;
+    overflow: hidden;
 }
 
-.trend-bar:hover {
-    background: linear-gradient(to top, #059669, #10b981);
-    transform: scaleY(1.05);
+.trend-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 9px;
+    transition: width 0.5s ease;
+    min-width: 4px;
 }
 
-.trend-bar-label {
-    position: absolute;
-    bottom: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 8px;
-    color: var(--text-medium);
-    white-space: nowrap;
-}
-
-.trend-bar-count {
-    position: absolute;
-    top: -18px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 10px;
+.trend-count {
+    min-width: 30px;
+    font-size: 12px;
     font-weight: 700;
     color: #047857;
+    text-align: left;
+}
+
+.no-data {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-medium);
+    font-size: 12px;
 }
 
 .trend-info {

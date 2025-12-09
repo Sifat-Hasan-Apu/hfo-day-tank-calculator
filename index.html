@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFO Day Tank Volume Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="plant-name">United Payra Power Limited</div>
+                <div class="icon">
+                    <img src="tank-icon.png" alt="Storage Tank" class="tank-img">
+                </div>
+                <h1>HFO Day Tank</h1>
+                <p class="subtitle">ক্যালিব্রেশন চার্ট ক্যালকুলেটর</p>
+            </div>
+
+            <div class="input-section">
+                <label for="dipHeight">ডিপ উচ্চতা (মিমি)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="dipHeight" placeholder="উচ্চতা লিখুন..." min="0" max="14925" step="1">
+                    <span class="unit">mm</span>
+                </div>
+                <div class="range-info">সীমা: ০ - ১৪,৯২৫ মিমি</div>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <div class="result-label">HFO ভলিউম</div>
+                <div class="result-value" id="resultValue">--</div>
+                <div class="result-unit">লিটার</div>
+            </div>
+
+            <div class="info-card" id="infoCard">
+                <div class="info-row">
+                    <span class="info-label">ডিপ উচ্চতা:</span>
+                    <span class="info-value" id="displayDip">--</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">নিকটতম নিম্ন মান:</span>
+                    <span class="info-value" id="lowerValue">--</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">নিকটতম উচ্চ মান:</span>
+                    <span class="info-value" id="upperValue">--</span>
+                </div>
+            </div>
+
+            <div class="breakdown-card" id="breakdownCard">
+                <div class="breakdown-title">📐 হিসাবের বিবরণ</div>
+                <div class="breakdown-content" id="breakdownContent">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Search Trend Chart -->
+            <div class="trend-card" id="trendCard">
+                <div class="trend-header">
+                    <span class="trend-title">📊 সার্চ ট্রেন্ড</span>
+                    <button class="clear-btn" onclick="clearSearchHistory()">রিসেট</button>
+                </div>
+                <div class="trend-chart" id="trendChart">
+                    <!-- Will be populated by JS -->
+                </div>
+                <div class="trend-info" id="trendInfo">মোট সার্চ: ০</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Developed by - Sifat Hasan Apu</p>
+        </div>
+    </div>
+
+    <script src="calibrationData.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
